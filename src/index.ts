@@ -1,206 +1,64 @@
 import { getInput } from './utils';
 
-type Cords = {
-    row: number,
-    col: number,
+type CardModel = {
+    id: number,
+    matchNumbersCount: number,
 }
 
-export function getSpecialCharCords (rows: string[][]): Map<string, Cords> {
-    const charCords = new Map<string, Cords>();
-    for (let i = 0; i < rows.length; i++) {
-        for (let j = 0; j < rows[0].length; j++) {
-            if (rows[i][j] !== '.' && isNaN(parseInt(rows[i][j]))) {
-                charCords.set(`${i}-${j}`, { row: i, col: j});
-            }
-        }
-    }
-    return charCords;
+function getNumbersFromString(input: string[]): number[] {
+    return input.map((char) => parseInt(char.trim())).filter(Boolean);
 }
 
-export function isNumber(val: string): boolean {
-    return !isNaN(parseInt(val));
+function getId(string: string): number {
+    const parts = string.split(' ');
+    return parseInt(parts[parts.length - 1]);
 }
 
-export function getNumberAtLeft(visitedCords: Map<string, boolean>, grid: string[][], col: number, row: number): number {
-    let values: string[] = [];
-
-    for (let i = col; i >= 0; i--) {
-        const cordString = `${row}-${i}`;
-        if (!visitedCords.has(cordString)) {
-            visitedCords.set(cordString, true);
-
-            const v = grid[row][i];
-            if (isNumber(v)) {
-                values.unshift(v);
-            } else {
-                break;
-            }
-        } else {
-            break;
-        }
+function getCardModel(input: string): CardModel {
+    const parts = input.split(':');
+    const cardId = getId(parts[0]);
+    const numSets = parts[1].split(' | ');
+    const winNumbers = getNumbersFromString(numSets[0].split(' '));
+    const scratchNumbers = getNumbersFromString(numSets[1].split(' '));
+    const matchNumbers = scratchNumbers.filter((n) => winNumbers.includes(n));
+    return {
+        id: cardId,
+        matchNumbersCount: matchNumbers.length,
     }
-
-    return parseInt(values.join(''));
-}
-
-export function getNumberAtRight(visitedCords: Map<string, boolean>, grid: string[][], col: number, row: number): number | null {
-    let values: string[] = [];
-
-    for (let i = col; i <= grid[0].length - 1; i++) {
-        const cordString = `${row}-${i}`;
-
-        if (!visitedCords.has(cordString)) {
-            visitedCords.set(cordString, true);
-
-            const v = grid[row][i];
-            if (isNumber(v)) {
-                values.push(v);
-            } else {
-                break;
-            }
-        } else {
-            break;
-        }
-    }
-
-    const number = parseInt(values.join(''));
-
-    return isNaN(number) ? null : number;
-}
-
-export function findStartIndex(row: string[], entryIndex: number): number {
-    let startIndex = entryIndex;
-    while(startIndex !== 0) {
-        const char = row[startIndex - 1];
-        if (isNaN(parseInt(char))) {
-            return startIndex;
-        } else {
-            startIndex--;
-        }
-    }
-    return startIndex;
-}
-
-export function exploreGrid(grid: string[][], cords: Cords, visitedCords: Map<string, boolean>): number[] {
-    const numbers: number[] = [];
-
-    if (cords.col - 1 >= 0) {
-        const left = grid[cords.row][cords.col - 1];
-        if (isNumber(left)) {
-            const number = getNumberAtLeft(visitedCords, grid, cords.col - 1, cords.row);
-            if (number) {
-                numbers.push(number);
-            }
-        }
-    }
-
-    if (cords.col + 1 <= grid[0].length - 1) {
-        const right = grid[cords.row][cords.col + 1];
-        if (isNumber(right)) {
-            const number = getNumberAtRight(visitedCords, grid, cords.col + 1, cords.row);
-            if (number) {
-                numbers.push(number);
-            }
-        }
-    }
-
-    if (cords.row - 1 >= 0) {
-        const top = grid[cords.row - 1][cords.col];
-
-        if (isNumber(top)) {
-            const startIndex = findStartIndex(grid[cords.row - 1], cords.col);
-            const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row - 1);
-            if (number) {
-                numbers.push(number);
-            }
-        }
-
-        if (cords.col - 1 >= 0) {
-            const topLeft = grid[cords.row - 1][cords.col - 1];
-            if (isNumber(topLeft)) {
-                const startIndex = findStartIndex(grid[cords.row - 1], cords.col - 1)
-                const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row - 1);
-                if (number) {
-                    numbers.push(number);
-                }
-            }
-        }
-        if (cords.col + 1 <= grid[0].length - 1) {
-            const topRight = grid[cords.row - 1][cords.col + 1];
-            if (isNumber(topRight)) {
-                const startIndex = findStartIndex(grid[cords.row - 1], cords.col + 1);
-                const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row - 1);
-                if (number) {
-                    numbers.push(number);
-                }
-            }
-        }
-    }
-
-    if (cords.row + 1 <= grid.length - 1) {
-        const bottom = grid[cords.row + 1][cords.col];
-
-        if (isNumber(bottom)) {
-            const startIndex = findStartIndex(grid[cords.row + 1], cords.col)
-            const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row + 1);
-            if (number) {
-                numbers.push(number);
-            }
-        }
-
-        if (cords.col - 1 >= 0) {
-            const bottomLeft = grid[cords.row + 1][cords.col - 1];
-            if (isNumber(bottomLeft)) {
-                const startIndex = findStartIndex(grid[cords.row + 1], cords.col - 1)
-                const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row + 1);
-                if (number) {
-                    numbers.push(number);
-                }
-            }
-        }
-        if (cords.col + 1 <= grid[0].length - 1) {
-            const bottomRight = grid[cords.row + 1][cords.col + 1];
-            if (isNumber(bottomRight)) {
-                const startIndex = findStartIndex(grid[cords.row + 1], cords.col + 1)
-                const number = getNumberAtRight(visitedCords, grid, startIndex, cords.row + 1);
-                if (number) {
-                    numbers.push(number);
-                }
-            }
-        }
-    }
-
-    return grid[cords.row][cords.col] === '*' && numbers.length === 2 ? numbers : [];
-}
-
-export function getEngineNumbers(rows: string[][], charCords: Map<string, Cords>): number[][] {
-    const engineNumber: number[][] = [];
-    const visitedCords = new Map<string, boolean>();
-
-    for (const [key, cords] of charCords) {
-        engineNumber.push(exploreGrid(rows, cords, visitedCords));
-    }
-
-    return engineNumber;
 }
 
 async function main() {
     const inputList = getInput('input.txt');
 
-    const rows: string[][] = [];
-    inputList.map((r) => rows.push( r.split('')))
+    const cardModels = inputList.map(getCardModel);
 
-    const charCords = getSpecialCharCords(rows);
-    const engineNumbers = getEngineNumbers(rows, charCords);
-    let sum = 0;
+    const returnCards = new Map<number, CardModel[]>();
+    for (const card of cardModels) {
+        const cards: CardModel[] = [];
+        for (let i = 0; i < card.matchNumbersCount; i++) {
+            const copy = cardModels[card.id + i];
+            if (copy) {
+                cards.push(copy);
+            }
+        }
+        returnCards.set(card.id, cards);
+    }
 
-    for (const numbers of engineNumbers) {
-        if (numbers.length > 1) {
-            sum += numbers[0] * numbers[1];
+    let totalScratchCards = cardModels.length;
+
+    let queue = [ ...cardModels ];
+    while (queue.length > 0) {
+        const current = queue.pop();
+        if (current) {
+            const newCards = returnCards.get(current.id);
+            if (newCards && newCards.length > 0) {
+                queue.push(...newCards);
+                totalScratchCards += newCards.length;
+            }
         }
     }
 
-    console.log(sum);
+    console.log(totalScratchCards); 
 }
 
 void main();
