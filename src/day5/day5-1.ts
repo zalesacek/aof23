@@ -1,9 +1,6 @@
-import { getInput } from './utils';
+import { getInput } from '../utils';
 
-type SeedRange = {
-    start: number,
-    end: number,
-}
+const isNumber = (value: string): boolean => !isNaN(parseInt(value));
 
 export type Mapper = {
     destinationStart: number,
@@ -25,22 +22,6 @@ export type Seed = {
     temp: number,
     humidity: number,
     location: number,
-}
-
-const isNumber = (value: string): boolean => !isNaN(parseInt(value));
-
-const getSeedsRange = (text: string): SeedRange[] => {
-    const numbers = text.split(': ')[1].split(' ').map(char => parseInt(char));
-    const ranges: SeedRange[] = [];
-
-    for (let i = 0; i < numbers.length; i+=2) {
-        ranges.push({
-            start: numbers[i],
-            end: numbers[i+1],
-        })
-    }
-
-    return ranges;
 }
 
 function getCategories(input: string[]): Category[] {
@@ -87,6 +68,10 @@ function fullfillValue(number: number, section: Category): number {
     return res;
 }
 
+function getSeedIds(input: string): number[] {
+    return input.split(' ').map((char) => parseInt(char));
+}
+
 function getLocationNumber(id: number, sections: Category[]) {
     const seedModel = {} as Seed;
     seedModel.id = id;
@@ -111,36 +96,19 @@ function getLocationNumber(id: number, sections: Category[]) {
     return seedModel.location;
 }
 
-function getLowestLocation(seedsRange: SeedRange[], categories: Category[]): number {
-    let lowestLocationNumber = Infinity;
+async function main() {
+    const inputList = getInput('input.txt');
 
-    for (const range of seedsRange) {
-        for (let j = range.start; j < range.start + range.end; j++) {
-            const location = getLocationNumber(j, categories);
-            console.log(`Seed ${j} - ${location}`);
-            if (location < lowestLocationNumber) {
-                lowestLocationNumber = location;
-            }
+    const seedIds = getSeedIds(inputList[0].split(': ')[1]);
+    const sections = getCategories(inputList);
+    let lowestLocationNumber = Infinity;
+    for (const seed of seedIds) {
+        const location = getLocationNumber(seed, sections);
+        if (location < lowestLocationNumber) {
+            lowestLocationNumber = location;
         }
     }
-
-    return lowestLocationNumber;
-}
-
-async function main() {
-    const start = performance.now();
-
-    const inputList = getInput('test.txt');
-
-    const seedsRange = getSeedsRange(inputList[0]);
-    const categories = getCategories(inputList);
-    
-    const lowestLocation = getLowestLocation(seedsRange, categories);
-
-    const end = performance.now();
-    const duration = Math.round((end - start) * 10) / 10;
-
-    console.log(`Lowest location: ${lowestLocation}\nTook ${duration} milliseconds.`);
+    console.log(lowestLocationNumber);
 }
 
 void main();
