@@ -1,8 +1,8 @@
-import { getInput } from './utils';
+import { getInput } from '../utils';
 
 const getHistoryLine = (value: string[]) => value.map((str) => str.split(' ').map(Number));
 
-const getFirstNumber = (line: number[]): number => {
+const getLastNumber = (line: number[]): number => {
     const sequences: number[][] = [ line ];
     let allZeros = false;
 
@@ -25,25 +25,25 @@ const getFirstNumber = (line: number[]): number => {
 
     for (let i = 0; i < sequences.length - 1; i++) {
         const idx = sequences.length - 1 - i;
-        const first1 = sequences[idx][0];
-        const first2 = sequences[idx - 1][0];
-        sequences[idx - 1].unshift(first2 - first1);
+        const last1 = sequences[idx][sequences[idx].length - 1];
+        const last2 = sequences[idx - 1][sequences[idx - 1].length - 1];
+        sequences[idx - 1].push(last1 + last2);
     }
 
-    return sequences[0][0];
+    return sequences[0][sequences[0].length - 1];
 }
 
 async function main() {
     const start = performance.now();
     const inputList = getInput('input.txt');
     const lines = getHistoryLine(inputList);
-    const firstNumbers = [];
+    const lastNumbers = [];
 
     for (const line of lines) {
-        firstNumbers.push(getFirstNumber(line));
+        lastNumbers.push(getLastNumber(line));
     }
 
-    const sumOfLast = firstNumbers.reduce((a, c) => a + c);
+    const sumOfLast = lastNumbers.reduce((a, c) => a + c);
 
     const end = performance.now();
     const duration = Math.round((end - start) * 10) / 10;

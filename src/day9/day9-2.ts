@@ -1,4 +1,4 @@
-import { getInput } from './utils';
+import { getInput } from '../utils';
 
 const getHistoryLine = (value: string[]) => value.map((str) => str.split(' ').map(Number));
 
