@@ -1,4 +1,4 @@
-import { getInput } from './utils';
+import { getInput } from '../utils';
 
 type Node = {
     value: string;
@@ -265,13 +265,12 @@ async function main() {
     const startCord = getStartCord(grid);
     const visited = new Map<string, boolean>();
     getLinkedListFromStart(grid, startCord, visited);
-
     let count = 0;
     const expandedGrid = getExpandedGrid(grid)
     const floodVisited = new Set<string>()
     floodFill(expandedGrid, [0, 0], floodVisited);
 
-    console.log(expandedGrid.map(l => l.join('')))
+    // console.log(expandedGrid.map(l => l.join('')))
 
     for (let y = 0; y < expandedGrid.length; y += 3) {
         for (let x = 0; x < expandedGrid[0].length; x += 3) {
